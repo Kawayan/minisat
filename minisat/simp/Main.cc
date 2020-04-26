@@ -21,11 +21,11 @@ OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWA
 #include <errno.h>
 #include <zlib.h>
 
-#include "minisat/utils/System.h"
-#include "minisat/utils/ParseUtils.h"
-#include "minisat/utils/Options.h"
-#include "minisat/core/Dimacs.h"
-#include "minisat/simp/SimpSolver.h"
+#include "../utils/System.h"
+#include "../utils/ParseUtils.h"
+#include "../utils/Options.h"
+#include "../core/Dimacs.h"
+#include "../simp/SimpSolver.h"
 
 using namespace Minisat;
 
@@ -98,7 +98,14 @@ int main(int argc, char** argv)
         
         parse_DIMACS(in, S, (bool)strictp);
         gzclose(in);
-        FILE* res = (argc >= 3) ? fopen(argv[2], "wb") : NULL;
+
+        FILE* res = NULL;
+        if (argc >= 3) {
+            errno_t error = fopen_s(&res, argv[2], "wb");
+            if (error != 0) {
+                res = NULL;
+            }
+        }
 
         if (S.verbosity > 0){
             printf("|  Number of variables:  %12d                                         |\n", S.nVars());

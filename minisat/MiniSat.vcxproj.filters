@@ -1,0 +1,96 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="core">
+      <UniqueIdentifier>{b781d54b-b543-4098-a655-dd104b293522}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="mtl">
+      <UniqueIdentifier>{261b5988-f803-4fda-85e2-2b8608cf1f39}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="simp">
+      <UniqueIdentifier>{fdbb9993-d07a-445d-bd72-ac51462a638b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="utils">
+      <UniqueIdentifier>{ea898ad2-6e4f-42e9-9798-7993ef9f122c}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="mtl\Alg.h">
+      <Filter>mtl</Filter>
+    </ClInclude>
+    <ClInclude Include="mtl\Alloc.h">
+      <Filter>mtl</Filter>
+    </ClInclude>
+    <ClInclude Include="mtl\Heap.h">
+      <Filter>mtl</Filter>
+    </ClInclude>
+    <ClInclude Include="mtl\IntMap.h">
+      <Filter>mtl</Filter>
+    </ClInclude>
+    <ClInclude Include="mtl\IntTypes.h">
+      <Filter>mtl</Filter>
+    </ClInclude>
+    <ClInclude Include="mtl\Map.h">
+      <Filter>mtl</Filter>
+    </ClInclude>
+    <ClInclude Include="mtl\Queue.h">
+      <Filter>mtl</Filter>
+    </ClInclude>
+    <ClInclude Include="mtl\Rnd.h">
+      <Filter>mtl</Filter>
+    </ClInclude>
+    <ClInclude Include="mtl\Sort.h">
+      <Filter>mtl</Filter>
+    </ClInclude>
+    <ClInclude Include="mtl\Vec.h">
+      <Filter>mtl</Filter>
+    </ClInclude>
+    <ClInclude Include="mtl\XAlloc.h">
+      <Filter>mtl</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\Options.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\ParseUtils.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\System.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="simp\SimpSolver.h">
+      <Filter>simp</Filter>
+    </ClInclude>
+    <ClInclude Include="core\Dimacs.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="core\Solver.h">
+      <Filter>core</Filter>
+    </ClInclude>
+    <ClInclude Include="core\SolverTypes.h">
+      <Filter>core</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="utils\Options.cc">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="utils\System.cc">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="simp\Main.cc">
+      <Filter>simp</Filter>
+    </ClCompile>
+    <ClCompile Include="simp\SimpSolver.cc">
+      <Filter>simp</Filter>
+    </ClCompile>
+    <ClCompile Include="core\Main.cc">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="core\Solver.cc">
+      <Filter>core</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
+</Project>
