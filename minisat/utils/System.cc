@@ -21,7 +21,7 @@ OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWA
 #include <signal.h>
 #include <stdio.h>
 
-#include "minisat/utils/System.h"
+#include "../utils/System.h"
 
 #if defined(__linux__)
 
@@ -91,7 +91,7 @@ double Minisat::memUsedPeak() { return memUsed(); }
 
 #else
 double Minisat::memUsed()     { return 0; }
-double Minisat::memUsedPeak() { return 0; }
+double Minisat::memUsedPeak(bool strictlyPeak) { return 0; }
 #endif
 
 
