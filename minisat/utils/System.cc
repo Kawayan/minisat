@@ -90,6 +90,7 @@ double Minisat::memUsed() {
 double Minisat::memUsedPeak() { return memUsed(); }
 
 #else
+// TODO: refactor this code for windows.
 double Minisat::memUsed()     { return 0; }
 double Minisat::memUsedPeak(bool strictlyPeak) { return 0; }
 #endif
