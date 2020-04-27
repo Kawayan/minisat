@@ -72,7 +72,7 @@
     <ClInclude Include="utils\System.h">
       <Filter>utils</Filter>
     </ClInclude>
-    <ClInclude Include="core\main.h">
+    <ClInclude Include="core\MainFunc.h">
       <Filter>core</Filter>
     </ClInclude>
   </ItemGroup>
@@ -92,7 +92,7 @@
     <ClCompile Include="utils\System.cc">
       <Filter>utils</Filter>
     </ClCompile>
-    <ClCompile Include="core\main.cc">
+    <ClCompile Include="core\MainFunc.cc">
       <Filter>core</Filter>
     </ClCompile>
   </ItemGroup>

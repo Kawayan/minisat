@@ -1,4 +1,4 @@
-#include "../minisat/core/main.h"
+#include "../minisat/core/MainFunc.h"
 
 int main(int argc, char** argv)
 {

@@ -12,7 +12,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="core\Dimacs.h" />
-    <ClInclude Include="core\main.h" />
+    <ClInclude Include="core\MainFunc.h" />
     <ClInclude Include="core\Solver.h" />
     <ClInclude Include="core\SolverTypes.h" />
     <ClInclude Include="mtl\Alg.h" />
@@ -32,7 +32,7 @@
     <ClInclude Include="utils\System.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="core\main.cc" />
+    <ClCompile Include="core\MainFunc.cc" />
     <ClCompile Include="core\Solver.cc" />
     <ClCompile Include="simp\Main.cc" />
     <ClCompile Include="simp\SimpSolver.cc" />
