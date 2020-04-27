@@ -7,6 +7,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MiniSat.Lib", "minisat\Mini
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MiniSat.Console", "MiniSat.Console\MiniSat.vcxproj", "{A983F670-82B7-4537-A254-F4BDE03F1A5F}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MiniSat.MFC", "MiniSat.MFC\MiniSat.MFC.vcxproj", "{00B01F83-0E58-4E44-8CEF-81620014EE1C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -21,6 +23,10 @@ Global
 		{A983F670-82B7-4537-A254-F4BDE03F1A5F}.Debug|x64.Build.0 = Debug|x64
 		{A983F670-82B7-4537-A254-F4BDE03F1A5F}.Release|x64.ActiveCfg = Release|x64
 		{A983F670-82B7-4537-A254-F4BDE03F1A5F}.Release|x64.Build.0 = Release|x64
+		{00B01F83-0E58-4E44-8CEF-81620014EE1C}.Debug|x64.ActiveCfg = Debug|x64
+		{00B01F83-0E58-4E44-8CEF-81620014EE1C}.Debug|x64.Build.0 = Debug|x64
+		{00B01F83-0E58-4E44-8CEF-81620014EE1C}.Release|x64.ActiveCfg = Release|x64
+		{00B01F83-0E58-4E44-8CEF-81620014EE1C}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

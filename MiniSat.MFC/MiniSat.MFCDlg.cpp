@@ -1,0 +1,356 @@
+﻿
+// MiniSat.MFCDlg.cpp : 実装ファイル
+//
+
+#include "pch.h"
+#include "framework.h"
+#include "MiniSat.MFC.h"
+#include "MiniSat.MFCDlg.h"
+#include "afxdialogex.h"
+
+#include <errno.h>
+#include <zlib.h>
+
+
+#undef max; // Required for "Vec.h".
+#include "../minisat/utils/System.h"
+#include "../minisat/utils/ParseUtils.h"
+#include "../minisat/utils/Options.h"
+#include "../minisat/core/Dimacs.h"
+#include "../minisat/core/Solver.h"
+#include "../minisat/core/MainFunc.h"
+
+
+
+#include "../minisat/core/MainFunc.h"
+
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#endif
+
+
+// アプリケーションのバージョン情報に使われる CAboutDlg ダイアログ
+
+class CAboutDlg : public CDialogEx
+{
+public:
+	CAboutDlg();
+
+// ダイアログ データ
+#ifdef AFX_DESIGN_TIME
+	enum { IDD = IDD_ABOUTBOX };
+#endif
+
+	protected:
+	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV サポート
+
+// 実装
+protected:
+	DECLARE_MESSAGE_MAP()
+public:
+	virtual BOOL PreTranslateMessage(MSG* pMsg);
+};
+
+CAboutDlg::CAboutDlg() : CDialogEx(IDD_ABOUTBOX)
+{
+}
+
+void CAboutDlg::DoDataExchange(CDataExchange* pDX)
+{
+	CDialogEx::DoDataExchange(pDX);
+}
+
+BEGIN_MESSAGE_MAP(CAboutDlg, CDialogEx)
+END_MESSAGE_MAP()
+
+
+// CMiniSatMFCDlg ダイアログ
+
+
+
+CMiniSatMFCDlg::CMiniSatMFCDlg(CWnd* pParent /*=nullptr*/)
+	: CDialogEx(IDD_MINISATMFC_DIALOG, pParent)
+    , m_inputString(_T(""))
+    , m_outputString(_T(""))
+    , m_inputFilePath(_T(""))
+{
+	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
+}
+
+void CMiniSatMFCDlg::DoDataExchange(CDataExchange* pDX)
+{
+    CDialogEx::DoDataExchange(pDX);
+    DDX_Text(pDX, IDC_EDIT_INPUT, m_inputString);
+    DDX_Text(pDX, IDC_EDIT_OUTPUT, m_outputString);
+    DDX_Text(pDX, IDC_EDIT1, m_inputFilePath);
+}
+
+BEGIN_MESSAGE_MAP(CMiniSatMFCDlg, CDialogEx)
+	ON_WM_SYSCOMMAND()
+	ON_WM_PAINT()
+	ON_WM_QUERYDRAGICON()
+	ON_BN_CLICKED(IDC_BT_CALCULATE, &CMiniSatMFCDlg::OnBnClickedBtCalculate)
+    ON_BN_CLICKED(IDC_BT_OPEN_FILE, &CMiniSatMFCDlg::OnBnClickedBtOpenFile)
+    ON_BN_CLICKED(IDC_BT_READ, &CMiniSatMFCDlg::OnBnClickedBtRead)
+END_MESSAGE_MAP()
+
+
+// CMiniSatMFCDlg メッセージ ハンドラー
+
+BOOL CMiniSatMFCDlg::OnInitDialog()
+{
+	CDialogEx::OnInitDialog();
+
+	// "バージョン情報..." メニューをシステム メニューに追加します。
+
+	// IDM_ABOUTBOX は、システム コマンドの範囲内になければなりません。
+	ASSERT((IDM_ABOUTBOX & 0xFFF0) == IDM_ABOUTBOX);
+	ASSERT(IDM_ABOUTBOX < 0xF000);
+
+	CMenu* pSysMenu = GetSystemMenu(FALSE);
+	if (pSysMenu != nullptr)
+	{
+		BOOL bNameValid;
+		CString strAboutMenu;
+		bNameValid = strAboutMenu.LoadString(IDS_ABOUTBOX);
+		ASSERT(bNameValid);
+		if (!strAboutMenu.IsEmpty())
+		{
+			pSysMenu->AppendMenu(MF_SEPARATOR);
+			pSysMenu->AppendMenu(MF_STRING, IDM_ABOUTBOX, strAboutMenu);
+		}
+	}
+
+	// このダイアログのアイコンを設定します。アプリケーションのメイン ウィンドウがダイアログでない場合、
+	//  Framework は、この設定を自動的に行います。
+	SetIcon(m_hIcon, TRUE);			// 大きいアイコンの設定
+	SetIcon(m_hIcon, FALSE);		// 小さいアイコンの設定
+
+	// TODO: 初期化をここに追加します。
+
+	return TRUE;  // フォーカスをコントロールに設定した場合を除き、TRUE を返します。
+}
+
+void CMiniSatMFCDlg::OnSysCommand(UINT nID, LPARAM lParam)
+{
+	if ((nID & 0xFFF0) == IDM_ABOUTBOX)
+	{
+		CAboutDlg dlgAbout;
+		dlgAbout.DoModal();
+	}
+	else
+	{
+		CDialogEx::OnSysCommand(nID, lParam);
+	}
+}
+
+// ダイアログに最小化ボタンを追加する場合、アイコンを描画するための
+//  下のコードが必要です。ドキュメント/ビュー モデルを使う MFC アプリケーションの場合、
+//  これは、Framework によって自動的に設定されます。
+
+void CMiniSatMFCDlg::OnPaint()
+{
+	if (IsIconic())
+	{
+		CPaintDC dc(this); // 描画のデバイス コンテキスト
+
+		SendMessage(WM_ICONERASEBKGND, reinterpret_cast<WPARAM>(dc.GetSafeHdc()), 0);
+
+		// クライアントの四角形領域内の中央
+		int cxIcon = GetSystemMetrics(SM_CXICON);
+		int cyIcon = GetSystemMetrics(SM_CYICON);
+		CRect rect;
+		GetClientRect(&rect);
+		int x = (rect.Width() - cxIcon + 1) / 2;
+		int y = (rect.Height() - cyIcon + 1) / 2;
+
+		// アイコンの描画
+		dc.DrawIcon(x, y, m_hIcon);
+	}
+	else
+	{
+		CDialogEx::OnPaint();
+	}
+}
+
+// ユーザーが最小化したウィンドウをドラッグしているときに表示するカーソルを取得するために、
+//  システムがこの関数を呼び出します。
+HCURSOR CMiniSatMFCDlg::OnQueryDragIcon()
+{
+	return static_cast<HCURSOR>(m_hIcon);
+}
+
+BOOL CAboutDlg::PreTranslateMessage(MSG* pMsg)
+{
+	if (WM_KEYDOWN == pMsg->message)
+	{
+		switch (pMsg->wParam)
+		{
+		case VK_RETURN:
+			return FALSE;
+		case VK_ESCAPE:
+			return FALSE;
+		default:
+			break;
+		}
+	}
+
+	return CDialogEx::PreTranslateMessage(pMsg);
+}
+
+
+void CMiniSatMFCDlg::OnBnClickedBtCalculate()
+{
+    CString output_text = _T("");
+    auto ExitFunc = [&]() {
+        m_outputString = output_text;
+        UpdateData(FALSE);
+    };
+
+    try {
+        // Extra options:
+        Minisat::IntOption    verb("MAIN", "verb", "Verbosity level (0=silent, 1=some, 2=more).", 1, Minisat::IntRange(0, 2));
+        Minisat::IntOption    cpu_lim("MAIN", "cpu-lim", "Limit on CPU time allowed in seconds.\n", 0, Minisat::IntRange(0, INT32_MAX));
+        Minisat::IntOption    mem_lim("MAIN", "mem-lim", "Limit on memory usage in megabytes.\n", 0, Minisat::IntRange(0, INT32_MAX));
+        Minisat::BoolOption   strictp("MAIN", "strict", "Validate DIMACS header during parsing.", false);
+
+        Minisat::Solver S;
+        double initial_time = Minisat::cpuTime();
+
+        S.verbosity = verb;
+
+        // Try to set resource limits:
+        if (cpu_lim != 0) limitTime(cpu_lim);
+        if (mem_lim != 0) limitMemory(mem_lim);
+
+        UpdateData();
+        CString input_text = m_inputString;
+        input_text.Replace(_T("\r\n"), _T("\n"));
+
+        // Create input file
+        TCHAR full_path[_MAX_PATH];
+        ::GetFullPathName(_T("./input.txt"), _MAX_PATH, full_path, NULL);
+        const CString input_path(full_path);
+        const CStringA input_pathA(input_path);
+        CStdioFile input_file(input_path, CFile::modeCreate | CFile::modeWrite | CFile::typeText);
+        input_file.WriteString(input_text);
+        input_file.Close();
+
+        gzFile in = gzopen(input_pathA, "rb");
+        if (in == NULL)
+        {
+            m_outputString = _T("ERROR! Could not open file: ") + input_path;
+            UpdateData(FALSE);
+            return;
+        }
+
+        /////////////////////////////////////////////////////////////////////////////////////////////////
+        
+        if (S.verbosity > 0) {
+            output_text += _T("[ Problem Statistics ]\r\n");
+        }
+
+        parse_DIMACS(in, S, (bool)strictp);
+        gzclose(in);
+        
+        CString msg;
+        if (S.verbosity > 0) {
+            msg.Format(_T("Number of variables:  %12d \r\n"), S.nVars());
+            output_text += msg;
+            msg.Format(_T("Number of clauses:    %12d \r\n"), S.nClauses());
+            output_text += msg;
+        }
+
+        double parsed_time = Minisat::cpuTime();
+        if (S.verbosity > 0) {
+            msg.Format(_T("Parse time:           %12.2f [s] \r\n"), parsed_time - initial_time);
+            output_text += msg;
+        }
+
+        if (!S.simplify()) 
+        {
+            if (S.verbosity > 0) {
+                output_text += _T("================================================\r\n");
+                output_text += _T("Solved by unit propagation\r\n");
+                S.printStats();
+                output_text += _T("\r\n");
+            }
+            output_text += _T("UNSATISFIABLE\r\n");
+
+            ExitFunc();
+            return;
+        }
+
+        Minisat::vec<Minisat::Lit> dummy;
+        Minisat::lbool ret = S.solveLimited(dummy);
+        if (S.verbosity > 0) {
+            S.printStats();
+            output_text += _T("\r\n");
+        }
+
+        if (ret == Minisat::l_True) {
+            output_text += _T("SATISFIABLE\r\n");
+        }
+        else if (ret == Minisat::l_False)
+        {
+            output_text += _T("UNSATISFIABLE\r\n");
+        }
+        else
+        {
+            output_text += _T("INDETERMINATE\r\n");
+        }
+
+        // output
+        {
+            if (ret == Minisat::l_True) 
+            {
+                for (int i = 0; i < S.nVars(); i++)
+                {
+                    if (S.model[i] != Minisat::l_Undef) {
+                        msg.Format(_T("%s%s%d"), (i == 0) ? _T("") : _T(" "), (S.model[i] == Minisat::l_True) ? _T("") : _T("-"), i + 1);
+                        output_text += msg;
+                    }
+                }
+                output_text += _T(" 0 \r\n");
+            }
+        }
+
+        ExitFunc();
+        return;
+    }
+    catch (Minisat::OutOfMemoryException&) {
+        output_text += _T("=============================================\r\n");
+        output_text += _T("INDETERMINATE\r\n");
+        
+        ExitFunc();
+        return;
+    }
+}
+
+void CMiniSatMFCDlg::OnBnClickedBtOpenFile()
+{
+    CFileDialog dlg(TRUE, _T("*.cnf"), NULL, OFN_EXPLORER, _T("cnf file (*.cnf)|*.cnf|all (*.*)|*.*|"));
+    if(dlg.DoModal() == IDOK)
+    {
+        m_inputFilePath = dlg.GetPathName();
+        OnBnClickedBtRead();
+    }
+}
+
+void CMiniSatMFCDlg::OnBnClickedBtRead()
+{
+    if(::PathFileExists(m_inputFilePath))
+    {
+        CStdioFile file;
+        file.Open(m_inputFilePath, CFile::typeText);
+
+        m_inputString = _T("");
+        CString line;
+        while (file.ReadString(line))
+        {
+            m_inputString += line + _T("\r\n");
+        }
+
+        UpdateData(FALSE);
+    }
+}
