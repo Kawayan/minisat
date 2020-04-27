@@ -26,6 +26,7 @@ OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWA
 #include "../utils/Options.h"
 #include "../core/Dimacs.h"
 #include "../core/Solver.h"
+#include "../core/MainFunc.h"
 
 using namespace Minisat;
 
@@ -52,7 +53,7 @@ static void SIGINT_exit(int) {
 // Main:
 
 
-int main(int argc, char** argv)
+int Minisat::mainFunc(int argc, char** argv)
 {
     try {
         setUsageHelp("USAGE: %s [options] <input-file> <result-output-file>\n\n  where input may be either in plain or gzipped DIMACS.\n");
