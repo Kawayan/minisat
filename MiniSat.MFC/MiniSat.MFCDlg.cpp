@@ -229,7 +229,7 @@ void CMiniSatMFCDlg::OnBnClickedBtCalculate()
 
         // Create input file
         TCHAR full_path[_MAX_PATH];
-        ::GetFullPathName(_T("./input.txt"), _MAX_PATH, full_path, NULL);
+        ::GetFullPathName(_T("./input.cnf"), _MAX_PATH, full_path, NULL);
         const CString input_path(full_path);
         const CStringA input_pathA(input_path);
         CStdioFile input_file(input_path, CFile::modeCreate | CFile::modeWrite | CFile::typeText);
