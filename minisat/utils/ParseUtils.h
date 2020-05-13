@@ -23,6 +23,7 @@ OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWA
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <exception>
 
 #include <zlib.h>
 
@@ -93,7 +94,10 @@ static int parseInt(B& in) {
     skipWhitespace(in);
     if      (*in == '-') neg = true, ++in;
     else if (*in == '+') ++in;
-    if (*in < '0' || *in > '9') fprintf(stderr, "PARSE ERROR! Unexpected char: %c\n", *in), exit(3);
+    if (*in < '0' || *in > '9')
+        throw std::exception("PARSE ERROR! Unexpected char: %c\n");
+        //fprintf(stderr, "PARSE ERROR! Unexpected char: %c\n", *in), exit(3);
+
     while (*in >= '0' && *in <= '9')
         val = val*10 + (*in - '0'),
         ++in;
