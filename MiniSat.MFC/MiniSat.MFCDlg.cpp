@@ -80,8 +80,11 @@ CMiniSatMFCDlg::CMiniSatMFCDlg(CWnd* pParent /*=nullptr*/)
 void CMiniSatMFCDlg::DoDataExchange(CDataExchange* pDX)
 {
     CDialogEx::DoDataExchange(pDX);
+    const int chars_limit = 99999999;
     DDX_Text(pDX, IDC_EDIT_INPUT, m_inputString);
+    DDV_MaxChars(pDX, m_inputString, chars_limit);
     DDX_Text(pDX, IDC_EDIT_OUTPUT, m_outputString);
+    DDV_MaxChars(pDX, m_outputString, chars_limit);
     DDX_Text(pDX, IDC_EDIT1, m_inputFilePath);
 }
 
