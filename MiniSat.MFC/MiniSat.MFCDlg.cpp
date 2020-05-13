@@ -465,6 +465,9 @@ void CMiniSatMFCDlg::OnBnClickedBtCalculate()
                     if (i % 9 != 0)
                         output_text += _T("\r\n");
                 }
+
+                // Turn SUDOKU mode off.(because the input text already transformed to cnf.)
+                m_isSudoku = FALSE;
             }
 
         }
