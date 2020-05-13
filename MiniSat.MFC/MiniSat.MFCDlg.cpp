@@ -10,6 +10,7 @@
 
 #include <errno.h>
 #include <zlib.h>
+#include <string>
 
 
 #undef max; // Required for "Vec.h".
@@ -73,6 +74,7 @@ CMiniSatMFCDlg::CMiniSatMFCDlg(CWnd* pParent /*=nullptr*/)
     , m_inputString(_T(""))
     , m_outputString(_T(""))
     , m_inputFilePath(_T(""))
+    , m_isSudoku(FALSE)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 }
@@ -86,6 +88,7 @@ void CMiniSatMFCDlg::DoDataExchange(CDataExchange* pDX)
     DDX_Text(pDX, IDC_EDIT_OUTPUT, m_outputString);
     DDV_MaxChars(pDX, m_outputString, chars_limit);
     DDX_Text(pDX, IDC_EDIT1, m_inputFilePath);
+    DDX_Check(pDX, IDC_CHECK_SUDOKU, m_isSudoku);
 }
 
 BEGIN_MESSAGE_MAP(CMiniSatMFCDlg, CDialogEx)
@@ -132,6 +135,113 @@ BOOL CMiniSatMFCDlg::OnInitDialog()
 	// TODO: 初期化をここに追加します。
 
 	return TRUE;  // フォーカスをコントロールに設定した場合を除き、TRUE を返します。
+}
+
+void CMiniSatMFCDlg::TransformToSudokuCnfText(CString* str)
+{
+    CString replace_input_text = _T("");
+    CString variable_text = _T("");
+
+    int row_index = 1;
+
+    int row_pos = 0;
+    auto row_text = str->Tokenize(_T("\r\n"), row_pos);
+    while (row_text != "")
+    {
+        int col_index = 1;
+        int cell_pos = 0;
+        auto cell_text = row_text.Tokenize(_T(" "), cell_pos);
+        while (cell_text != "")
+        {
+            int val = _ttoi(cell_text);
+            if (val >= 1 && val <= 9)
+            {
+                variable_text.Format(_T("%d%d%d 0\r\n"), row_index, col_index, val);
+                replace_input_text += variable_text;
+            }
+
+            cell_text = row_text.Tokenize(_T(" "), cell_pos);
+            col_index++;
+        }
+
+        row_text = str->Tokenize(_T("\r\n"), row_pos);
+        row_index++;
+    }
+
+    *str = replace_input_text;
+}
+
+void CMiniSatMFCDlg::AddSudokuCnfText(CString* str)
+{
+    CString add_cnf_text = _T("");
+    CString cnf = _T("");
+
+    // From 1 to 9 in one cell
+    for (size_t i = 1; i <= 9; i++) {
+        for (size_t j = 1; j <= 9; j++) {
+            for (size_t val = 1; val <= 9; val++)
+            {
+                cnf.Format(_T("%d%d%d "), i, j, val);
+                add_cnf_text += cnf;
+            }
+            add_cnf_text += _T("0\r\n");
+        }
+    }
+
+    // From 1 to 9 in one row and one column
+    for (size_t val = 1; val <= 9; val++) {
+        for (size_t i = 1; i <= 9; i++) {
+            for (size_t j = 1; j <= 9; j++) {
+                for (size_t jj = j + 1; jj <= 9; jj++)
+                {
+                    // row
+                    cnf.Format(_T("-%d%d%d -%d%d%d 0\r\n"), i, j, val, i, jj, val);
+                    add_cnf_text += cnf;
+
+                    // column
+                    cnf.Format(_T("-%d%d%d -%d%d%d 0\r\n"), j, i, val, jj, i, val);
+                    add_cnf_text += cnf;
+                }
+            }
+        }
+    }
+
+    // From 1 to 9 in 3×3
+    for (size_t start_i = 1; start_i <= 7; start_i += 3)
+    {
+        for (size_t start_j = 1; start_j <= 7; start_j += 3)
+        {
+            size_t end_i = start_i + 2;
+            size_t end_j = start_j + 2;
+
+            for (size_t val = 1; val <= 9; val++) {
+                size_t skip_num = 0;
+                for (size_t i0 = start_i; i0 <= end_i; i0++) {
+                    for (size_t j0 = start_j; j0 <= end_j; j0++) {
+
+                        skip_num++;
+                        size_t count = 0;
+
+                        for (size_t i = start_i; i <= end_i; i++) {
+                            for (size_t j = start_j; j <= end_j; j++)
+                            {
+                                if (count < skip_num)
+                                {
+                                    count++;
+                                    continue;
+                                }
+
+                                cnf.Format(_T("-%d%d%d -%d%d%d 0\r\n"), i0, j0, val, i, j, val);
+                                add_cnf_text += cnf;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    *str += add_cnf_text;
 }
 
 void CMiniSatMFCDlg::OnSysCommand(UINT nID, LPARAM lParam)
@@ -204,13 +314,26 @@ BOOL CAboutDlg::PreTranslateMessage(MSG* pMsg)
 
 void CMiniSatMFCDlg::OnBnClickedBtCalculate()
 {
+    UpdateData();
+
     CString output_text = _T("");
     auto ExitFunc = [&]() {
         m_outputString = output_text;
         UpdateData(FALSE);
+
+        CEdit* output_edit = (CEdit*)GetDlgItem(IDC_EDIT_OUTPUT);
+        output_edit->LineScroll(999);
     };
 
-    try {
+    // SUDOKU
+    if(m_isSudoku)
+    {
+        TransformToSudokuCnfText(&m_inputString);
+        AddSudokuCnfText(&m_inputString);
+    }
+
+    try 
+    {
         // Extra options:
         Minisat::IntOption    verb("MAIN", "verb", "Verbosity level (0=silent, 1=some, 2=more).", 1, Minisat::IntRange(0, 2));
         Minisat::IntOption    cpu_lim("MAIN", "cpu-lim", "Limit on CPU time allowed in seconds.\n", 0, Minisat::IntRange(0, INT32_MAX));
@@ -226,7 +349,6 @@ void CMiniSatMFCDlg::OnBnClickedBtCalculate()
         if (cpu_lim != 0) limitTime(cpu_lim);
         if (mem_lim != 0) limitMemory(mem_lim);
 
-        UpdateData();
         CString input_text = m_inputString;
         input_text.Replace(_T("\r\n"), _T("\n"));
 
@@ -253,7 +375,18 @@ void CMiniSatMFCDlg::OnBnClickedBtCalculate()
             output_text += _T("[ Problem Statistics ]\r\n");
         }
 
-        parse_DIMACS(in, S, (bool)strictp);
+        try
+        {
+            parse_DIMACS(in, S, (bool)strictp);
+        }
+        catch (const std::exception&)
+        {
+            gzclose(in);
+            output_text = _T("ERROR: parse_DIMACS\r\n");
+            ExitFunc();
+            return;
+        }
+        
         gzclose(in);
         
         CString msg;
@@ -293,19 +426,9 @@ void CMiniSatMFCDlg::OnBnClickedBtCalculate()
 
         if (ret == Minisat::l_True) {
             output_text += _T("SATISFIABLE\r\n");
-        }
-        else if (ret == Minisat::l_False)
-        {
-            output_text += _T("UNSATISFIABLE\r\n");
-        }
-        else
-        {
-            output_text += _T("INDETERMINATE\r\n");
-        }
 
-        // output
-        {
-            if (ret == Minisat::l_True) 
+            // output
+            if (!m_isSudoku)
             {
                 for (int i = 0; i < S.nVars(); i++)
                 {
@@ -316,14 +439,53 @@ void CMiniSatMFCDlg::OnBnClickedBtCalculate()
                 }
                 output_text += _T(" 0 \r\n");
             }
+            else if(S.nVars() == 999)
+            {
+                // SUDOKU
+                output_text += "------------------\r\n";
+
+                for (size_t i = 1; i <= 9; i++){
+                    for (size_t j = 1; j <= 9; j++){
+                        for (size_t val = 1; val <= 9; val++)
+                        {
+                            int index = (i * 100) + (j * 10) + val -1; // -1 because index
+                            if (S.model[index] == Minisat::l_True)
+                            {
+                                msg.Format(_T("%d "), val);
+                                output_text += msg;
+                                break;
+                            }
+                        }
+                        if (j % 3 == 0)
+                            output_text += "| ";
+                    }
+                    if (i % 3 == 0)
+                        output_text += "\r\n------------------";
+
+                    if (i % 9 != 0)
+                        output_text += _T("\r\n");
+                }
+            }
+
         }
+        else if (ret == Minisat::l_False)
+        {
+            output_text += _T("UNSATISFIABLE\r\n");
+        }
+        else
+        {
+            output_text += _T("INDETERMINATE\r\n");
+        }
+
+        
 
         ExitFunc();
         return;
     }
-    catch (Minisat::OutOfMemoryException&) {
+    catch (const std::exception&e) 
+    {
         output_text += _T("=============================================\r\n");
-        output_text += _T("INDETERMINATE\r\n");
+        output_text += _T("Error \r\n");
         
         ExitFunc();
         return;
