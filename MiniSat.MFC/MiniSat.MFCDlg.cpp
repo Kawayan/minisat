@@ -74,7 +74,6 @@ CMiniSatMFCDlg::CMiniSatMFCDlg(CWnd* pParent /*=nullptr*/)
     , m_inputString(_T(""))
     , m_outputString(_T(""))
     , m_inputFilePath(_T(""))
-    , m_isSudoku(FALSE)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 }
@@ -88,7 +87,6 @@ void CMiniSatMFCDlg::DoDataExchange(CDataExchange* pDX)
     DDX_Text(pDX, IDC_EDIT_OUTPUT, m_outputString);
     DDV_MaxChars(pDX, m_outputString, chars_limit);
     DDX_Text(pDX, IDC_EDIT1, m_inputFilePath);
-    DDX_Check(pDX, IDC_CHECK_SUDOKU, m_isSudoku);
 }
 
 BEGIN_MESSAGE_MAP(CMiniSatMFCDlg, CDialogEx)
@@ -188,7 +186,20 @@ void CMiniSatMFCDlg::AddSudokuCnfText(CString* str)
         }
     }
 
-    // From 1 to 9 in one row and one column
+    // From 1 to 9 in one column
+    for (size_t val = 1; val <= 9; val++) {
+        for (size_t i = 1; i <= 9; i++) {
+            for (size_t j = 1; j <= 9; j++) {
+                for (size_t jj = j + 1; jj <= 9; jj++)
+                {
+                    cnf.Format(_T("-%d%d%d -%d%d%d 0\r\n"), j, i, val, jj, i, val);
+                    add_cnf_text += cnf;
+                }
+            }
+        }
+    }
+
+    // From 1 to 9 in one row
     for (size_t val = 1; val <= 9; val++) {
         for (size_t i = 1; i <= 9; i++) {
             for (size_t j = 1; j <= 9; j++) {
@@ -196,10 +207,6 @@ void CMiniSatMFCDlg::AddSudokuCnfText(CString* str)
                 {
                     // row
                     cnf.Format(_T("-%d%d%d -%d%d%d 0\r\n"), i, j, val, i, jj, val);
-                    add_cnf_text += cnf;
-
-                    // column
-                    cnf.Format(_T("-%d%d%d -%d%d%d 0\r\n"), j, i, val, jj, i, val);
                     add_cnf_text += cnf;
                 }
             }
@@ -311,7 +318,6 @@ BOOL CAboutDlg::PreTranslateMessage(MSG* pMsg)
 	return CDialogEx::PreTranslateMessage(pMsg);
 }
 
-
 void CMiniSatMFCDlg::OnBnClickedBtCalculate()
 {
     UpdateData();
@@ -325,11 +331,31 @@ void CMiniSatMFCDlg::OnBnClickedBtCalculate()
         output_edit->LineScroll(999);
     };
 
+    m_inputString.MakeLower();
+
+    auto first_six_str = m_inputString.Left(6);
+    auto first_ten_str = m_inputString.Left(10);
+    
     // SUDOKU
-    if(m_isSudoku)
+    bool is_SUDOKU_cnf = false;
+    const CString SUDOKU_STR = _T("sudoku");
+    const CString CNF_SUDOKU_STR = _T("cnf sudoku");
+    if(first_six_str.CompareNoCase(SUDOKU_STR) == 0)
     {
+        is_SUDOKU_cnf = true;
+
+        // trim first one line
+        auto temp = m_inputString.TrimLeft(SUDOKU_STR);
+        m_inputString = temp.TrimLeft();
+
         TransformToSudokuCnfText(&m_inputString);
         AddSudokuCnfText(&m_inputString);
+
+        m_inputString = CNF_SUDOKU_STR + _T("\r\n") + m_inputString;
+    }
+    else if (first_ten_str.CompareNoCase(CNF_SUDOKU_STR) == 0)
+    {
+        is_SUDOKU_cnf = true;
     }
 
     try 
@@ -356,12 +382,11 @@ void CMiniSatMFCDlg::OnBnClickedBtCalculate()
         TCHAR full_path[_MAX_PATH];
         ::GetFullPathName(_T("./input.cnf"), _MAX_PATH, full_path, NULL);
         const CString input_path(full_path);
-        const CStringA input_pathA(input_path);
         CStdioFile input_file(input_path, CFile::modeCreate | CFile::modeWrite | CFile::typeText);
         input_file.WriteString(input_text);
         input_file.Close();
 
-        gzFile in = gzopen(input_pathA, "rb");
+        gzFile in = gzopen_w(input_path, "rb");
         if (in == NULL)
         {
             m_outputString = _T("ERROR! Could not open file: ") + input_path;
@@ -428,27 +453,16 @@ void CMiniSatMFCDlg::OnBnClickedBtCalculate()
             output_text += _T("SATISFIABLE\r\n");
 
             // output
-            if (!m_isSudoku)
-            {
-                for (int i = 0; i < S.nVars(); i++)
-                {
-                    if (S.model[i] != Minisat::l_Undef) {
-                        msg.Format(_T("%s%s%d"), (i == 0) ? _T("") : _T(" "), (S.model[i] == Minisat::l_True) ? _T("") : _T("-"), i + 1);
-                        output_text += msg;
-                    }
-                }
-                output_text += _T(" 0 \r\n");
-            }
-            else if(S.nVars() == 999)
+            if (is_SUDOKU_cnf)
             {
                 // SUDOKU
                 output_text += "------------------\r\n";
 
-                for (size_t i = 1; i <= 9; i++){
-                    for (size_t j = 1; j <= 9; j++){
+                for (size_t i = 1; i <= 9; i++) {
+                    for (size_t j = 1; j <= 9; j++) {
                         for (size_t val = 1; val <= 9; val++)
                         {
-                            int index = (i * 100) + (j * 10) + val -1; // -1 because index
+                            int index = (i * 100) + (j * 10) + val - 1; // -1 because index
                             if (S.model[index] == Minisat::l_True)
                             {
                                 msg.Format(_T("%d "), val);
@@ -465,11 +479,18 @@ void CMiniSatMFCDlg::OnBnClickedBtCalculate()
                     if (i % 9 != 0)
                         output_text += _T("\r\n");
                 }
-
-                // Turn SUDOKU mode off.(because the input text already transformed to cnf.)
-                m_isSudoku = FALSE;
             }
-
+            else
+            {
+                for (int i = 0; i < S.nVars(); i++)
+                {
+                    if (S.model[i] != Minisat::l_Undef) {
+                        msg.Format(_T("%s%s%d"), (i == 0) ? _T("") : _T(" "), (S.model[i] == Minisat::l_True) ? _T("") : _T("-"), i + 1);
+                        output_text += msg;
+                    }
+                }
+                output_text += _T(" 0 \r\n");
+            }
         }
         else if (ret == Minisat::l_False)
         {
@@ -479,8 +500,6 @@ void CMiniSatMFCDlg::OnBnClickedBtCalculate()
         {
             output_text += _T("INDETERMINATE\r\n");
         }
-
-        
 
         ExitFunc();
         return;
