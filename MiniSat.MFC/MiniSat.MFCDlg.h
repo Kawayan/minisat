@@ -38,5 +38,4 @@ protected:
 	CString m_inputString;
 	CString m_outputString;
 	CString m_inputFilePath;
-	BOOL m_isSudoku;
 };
