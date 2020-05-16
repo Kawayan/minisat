@@ -24,9 +24,6 @@ protected:
 	// 生成された、メッセージ割り当て関数
 	virtual BOOL OnInitDialog();
 
-	void TransformToSudokuCnfText(CString* str);
-	void AddSudokuCnfText(CString* str);
-
 	afx_msg void OnSysCommand(UINT nID, LPARAM lParam);
 	afx_msg void OnPaint();
 	afx_msg void OnBnClickedBtCalculate();

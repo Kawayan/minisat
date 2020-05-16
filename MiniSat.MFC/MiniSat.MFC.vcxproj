@@ -104,6 +104,8 @@
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="CnfNumberlink.h" />
+    <ClInclude Include="CnfSusoku.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="MiniSat.MFC.h" />
     <ClInclude Include="MiniSat.MFCDlg.h" />
@@ -112,6 +114,8 @@
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="CnfNumberlink.cpp" />
+    <ClCompile Include="CnfSusoku.cpp" />
     <ClCompile Include="MiniSat.MFC.cpp" />
     <ClCompile Include="MiniSat.MFCDlg.cpp" />
     <ClCompile Include="pch.cpp">
